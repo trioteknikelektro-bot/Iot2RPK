@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Monitor — Ciseeng</title>
+
+<style>
+/* ── Google Fonts: Syne (display) + DM Sans (body) + DM Mono ── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  /* Palette — deep slate with amber accent */
+  --bg:       #0a0c10;
+  --surface:  #0f1117;
+  --s2:       #141820;
+  --s3:       #1a2030;
+  --border:   #1e2535;
+  --border2:  #242e42;
+  --text:     #e8edf5;
+  --dim:      #5a7299;
+  --muted:    #2a3a52;
+
+  --accent:   #f59e0b;   /* amber */
+  --blue:     #38bdf8;
+  --teal:     #2dd4bf;
+  --green:    #4ade80;
+  --red:      #f87171;
+  --purple:   #a78bfa;
+  --orange:   #fb923c;
+  --fan:      #38bdf8;
+  --lamp:     #f59e0b;
+
+  --display: 'Syne', sans-serif;
+  --sans:    'DM Sans', sans-serif;
+  --mono:    'DM Mono', monospace;
+  --sw: 240px;
+  --r: 12px;
+  --r2: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.2);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────────────────────────────────
+   LOGIN — split layout
+───────────────────────────────────────── */
+#loginPage {
+  position: fixed; inset: 0; z-index: 9997;
+  display: flex; overflow: hidden;
+}
+.lg-left {
+  flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 52px 56px;
+  background: var(--bg);
+}
+.lg-left::after {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 55% at 20% 30%, rgba(245,158,11,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 50% at 80% 70%, rgba(56,189,248,.05) 0%, transparent 55%);
+}
+.lg-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: .35;
+}
+.lg-top-badge {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 11px; font-weight: 500; color: var(--dim);
+  letter-spacing: .03em;
+}
+.lg-top-badge span { color: var(--accent); font-weight: 600; }
+.lg-brand { position: relative; z-index: 1; margin-top: auto; padding-top: 48px; }
+.lg-brand-headline {
+  font-family: var(--display);
+  font-size: clamp(36px, 4vw, 54px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.lg-brand-headline em { color: var(--accent); font-style: normal; }
+.lg-brand-desc {
+  font-size: 14px; color: var(--dim);
+  line-height: 1.7; max-width: 380px;
+  margin-bottom: 36px;
+}
+.lg-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.lg-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 100px;
+  background: var(--s2); border: 1px solid var(--border2);
+  font-size: 11px; font-weight: 500; color: var(--dim);
+}
+.lg-chip b { color: var(--text); font-weight: 600; }
+
+.lg-right {
+  width: 420px; flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 52px 44px;
+  overflow-y: auto;
+}
+.lg-form-eyebrow {
+  font-size: 10px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 10px;
+}
+.lg-form-title {
+  font-family: var(--display);
+  font-size: 28px; font-weight: 700;
+  letter-spacing: -.5px; color: var(--text);
+  margin-bottom: 6px;
+}
+.lg-form-sub { font-size: 13px; color: var(--dim); margin-bottom: 32px; }
+.lg-tabs {
+  display: flex; gap: 0; margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.lg-tab {
+  padding: 9px 0; margin-right: 22px;
+  border: none; background: none;
+  color: var(--muted); font-family: var(--sans);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; position: relative;
+  transition: color .2s;
+}
+.lg-tab::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 0; right: 0; height: 2px;
+  background: var(--accent); border-radius: 2px;
+  transform: scaleX(0); transition: transform .2s;
+}
+.lg-tab.active { color: var(--text); }
+.lg-tab.active::after { transform: scaleX(1); }
+
+.fg { margin-bottom: 16px; }
+.fl {
+  display: block; font-size: 10px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 7px;
+}
+.fi {
+  width: 100%;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--r2); color: var(--text);
+  font-family: var(--sans); font-size: 14px;
+  padding: 10px 13px; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.fi:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245,158,11,.1);
+}
+.fi::placeholder { color: var(--muted); }
+.lg-btn {
+  width: 100%; padding: 11px;
+  background: var(--accent); border: none;
+  border-radius: var(--r2); color: #0a0c10;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: background .2s, transform .15s;
+  margin-top: 4px; letter-spacing: .01em;
+}
+.lg-btn:hover { background: #fbbf24; transform: translateY(-1px); }
+.lg-btn:active { transform: translateY(0); }
+.lg-err {
+  background: rgba(248,113,113,.07);
+  border: 1px solid rgba(248,113,113,.2);
+  color: var(--red);
+  font-size: 12px; padding: 9px 13px;
+  border-radius: var(--r2); margin-top: 12px; display: none;
+}
+.pw-strength { height: 3px; border-radius: 2px; margin-top: 6px; transition: all .3s; background: var(--border); }
+.pw-strength.weak   { background: var(--red);    width: 33%; }
+.pw-strength.medium { background: var(--accent); width: 66%; }
+.pw-strength.strong { background: var(--green);  width: 100%; }
+.av-upload {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px; padding: 12px 14px;
+  background: var(--s2); border-radius: var(--r2);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: border-color .2s;
+}
+.av-upload:hover { border-color: var(--border2); }
+.av-prev {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border-radius: 50%; background: var(--s3);
+  border: 1.5px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; overflow: hidden; position: relative;
+  transition: border-color .2s;
+}
+.av-prev img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none; }
+.av-info-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.av-hint { font-size: 11px; color: var(--dim); }
+
+@media (max-width: 768px) {
+  .lg-left  { display: none; }
+  .lg-right { width: 100%; padding: 40px 28px; }
+}
+
+/* ─────────────────────────────────────────
+   APP SHELL
+───────────────────────────────────────── */
+#app { display: none; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--sw);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100;
+}
+.sb-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.sb-icon {
+  width: 32px; height: 32px; border-radius: var(--r2);
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.sb-logo span {
+  font-family: var(--display);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: -.1px; color: var(--text);
+}
+.sb-user {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.sb-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--s2); border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; overflow: hidden; flex-shrink: 0;
+}
+.sb-av img { width:100%;height:100%;object-fit:cover; }
+.sb-uname { font-size: 13px; font-weight: 600; }
+.sb-role  { font-size: 10px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; margin-top: 1px; }
+.sb-nav   { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-sec  { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 10px 8px 5px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--r2);
+  color: var(--dim); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; margin-bottom: 1px;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--s2); color: var(--text); }
+.nav-item.active {
+  background: rgba(245,158,11,.07);
+  color: var(--accent);
+  border-color: rgba(245,158,11,.15);
+}
+.nav-ic { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+.nb { margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;display:none; }
+.sb-bot { padding: 10px; border-top: 1px solid var(--border); }
+.lo-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--r2);
+  color: var(--dim); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+  width: 100%; background: none; border: 1px solid transparent;
+}
+.lo-btn:hover { background: rgba(248,113,113,.07); color: var(--red); border-color: rgba(248,113,113,.12); }
+
+/* Topbar */
+.main { margin-left: var(--sw); min-height: 100vh; }
+.topbar {
+  height: 56px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; position: sticky; top: 0; z-index: 50;
+  background: rgba(10,12,16,.9); backdrop-filter: blur(16px);
+}
+.tp-title { font-size: 14px; font-weight: 600; }
+.tp-bc    { font-size: 11px; color: var(--dim); }
+.tp-right { display: flex; align-items: center; gap: 10px; }
+.sp {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--s2); border: 1px solid var(--border);
+  padding: 5px 12px; border-radius: 100px;
+  font-size: 11px; font-weight: 500;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot.on  { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2.5s ease infinite; }
+.dot.off { background: var(--red); }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+.tp-clk { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+
+/* Page */
+.page { display: none; padding: 28px 24px; animation: pgIn .2s ease both; }
+.page.active { display: block; }
+@keyframes pgIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
+.ph { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.ph h2 { font-family: var(--display); font-size: 18px; font-weight: 700; }
+.ph p  { font-size: 12px; color: var(--dim); margin-top: 3px; }
+.ph-acts { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-o {
+  background: none; border: 1px solid var(--border2);
+  color: var(--dim); font-family: var(--sans);
+  font-size: 11px; font-weight: 500;
+  padding: 6px 14px; border-radius: 100px;
+  cursor: pointer; transition: all .2s;
+}
+.btn-o:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─────────────────────────────────────────
+   SENSOR CARDS
+───────────────────────────────────────── */
+.sensor-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
+.sc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: border-color .3s, box-shadow .3s;
+}
+.sc::after {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--dim); opacity: .3;
+  transition: opacity .3s;
+}
+.sc.ok::after    { background: var(--green);  opacity: 1; }
+.sc.warn::after  { background: var(--accent); opacity: 1; }
+.sc.danger::after { background: var(--red);   opacity: 1; }
+.sc.danger { animation: pulse-danger 2.5s ease infinite; }
+@keyframes pulse-danger { 0%,100%{box-shadow:none;} 50%{box-shadow:0 0 24px rgba(248,113,113,.08);} }
+.sc-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim);
+  margin-bottom: 14px;
+}
+.sc-val {
+  font-size: 44px; font-weight: 300; line-height: 1;
+  font-family: var(--mono); letter-spacing: -.02em;
+}
+.sc.warn .sc-val   { color: var(--accent); }
+.sc.danger .sc-val { color: var(--red); }
+.sc-unit { font-size: 16px; color: var(--dim); }
+.sc-st {
+  font-size: 10px; margin-top: 12px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.sc-st.ok     { color: var(--green); }
+.sc-st.warn   { color: var(--accent); }
+.sc-st.danger { color: var(--red); }
+.sc-st.dim    { color: var(--dim); }
+.sparkline { display: flex; align-items: flex-end; gap: 2px; height: 24px; margin-top: 10px; }
+.sp-bar { flex: 1; border-radius: 2px; min-height: 2px; transition: height .4s; }
+
+/* Device cards */
+.dev-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.dc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 20px 22px;
+  position: relative; overflow: hidden; transition: all .3s;
+}
+.dc::after {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--dim); opacity: .2; transition: all .3s;
+}
+.dc.af::after  { background: var(--fan);  opacity: 1; }
+.dc.al::after  { background: var(--lamp); opacity: 1; }
+.dc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.dc-name { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.dc-ic { font-size: 28px; transition: all .4s; filter: grayscale(1) brightness(.3); }
+.dc.af .dc-ic { filter: none; animation: spin 1.2s linear infinite; }
+.dc.al .dc-ic { filter: none; animation: glow-lamp 2.5s ease infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes glow-lamp { 0%,100%{text-shadow:0 0 8px rgba(245,158,11,.3);} 50%{text-shadow:0 0 20px rgba(245,158,11,.7);} }
+.dc-st  { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--dim); margin-bottom: 2px; transition: color .3s; }
+.dc.af .dc-st { color: var(--fan); }
+.dc.al .dc-st { color: var(--lamp); }
+.dc-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+.dc-btns { display: flex; gap: 8px; }
+.db {
+  flex: 1; padding: 7px 0;
+  border-radius: var(--r2); font-family: var(--sans);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; border: 1px solid; transition: all .15s;
+  background: none; text-transform: uppercase; letter-spacing: .06em;
+}
+.db:active { transform: scale(.97); }
+.db.on-f  { border-color: var(--fan);  color: var(--fan); }
+.db.on-f:hover  { background: rgba(56,189,248,.08); }
+.db.off-f { border-color: var(--muted); color: var(--dim); }
+.db.off-f:hover { background: rgba(100,100,100,.06); }
+.db.on-l  { border-color: var(--lamp); color: var(--lamp); }
+.db.on-l:hover  { background: rgba(245,158,11,.08); }
+.db.off-l { border-color: var(--muted); color: var(--dim); }
+.db.off-l:hover { background: rgba(100,100,100,.06); }
+
+/* ─────────────────────────────────────────
+   WEATHER + SHOLAT
+───────────────────────────────────────── */
+.ws-row { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 16px; }
+.wx-card, .sholat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px; position: relative; overflow: hidden;
+}
+.wx-card::before  { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,var(--blue),var(--teal)); opacity:.5; }
+.sholat-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--orange)); opacity:.6; }
+.wx-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+.wx-loc    { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.wx-updated { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.wx-main   { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+.wx-icon   { font-size: 48px; line-height: 1; }
+.wx-temp   { font-size: 52px; font-weight: 300; line-height: 1; font-family: var(--mono); }
+.wx-feel   { font-size: 12px; color: var(--dim); margin-top: 4px; }
+.wx-desc   { font-size: 15px; font-weight: 500; margin-top: 4px; }
+.wx-grid   { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.wx-stat   { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r2); padding: 10px 12px; text-align: center; }
+.wx-stat-val { font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.wx-stat-lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; margin-top: 3px; }
+
+.wx-forecast { display: flex; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 2px; }
+.wx-forecast::-webkit-scrollbar { height: 3px; }
+.wx-forecast::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.fc-item {
+  flex-shrink: 0; background: var(--s2);
+  border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 10px 14px; text-align: center; min-width: 80px;
+  transition: border-color .2s;
+}
+.fc-item:hover { border-color: var(--border2); }
+.fc-day  { font-size: 9px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+.fc-ic   { font-size: 22px; margin-bottom: 5px; }
+.fc-hi   { font-size: 13px; font-weight: 600; }
+.fc-lo   { font-size: 11px; color: var(--dim); }
+.fc-rain { font-size: 10px; color: var(--blue); margin-top: 3px; }
+
+/* UV */
+.uv-badge-wrap { display:flex; align-items:center; gap:6px; }
+.uv-card { background:var(--s2); border:1px solid var(--border); border-radius:var(--r2); padding:12px 14px; margin-top:12px; }
+.uv-card-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.uv-label { font-size:11px; color:var(--dim); font-weight:500; }
+.uv-val   { font-size:22px; font-weight:700; color:var(--text); line-height:1; font-family:var(--mono); }
+.uv-cat   { font-size:10px; font-weight:600; padding:3px 10px; border-radius:100px; margin-left:auto; }
+.uv-cat.low       { background:rgba(74,222,128,.1);  color:var(--green);  border:1px solid rgba(74,222,128,.2); }
+.uv-cat.moderate  { background:rgba(245,158,11,.1);  color:var(--accent); border:1px solid rgba(245,158,11,.2); }
+.uv-cat.high      { background:rgba(251,146,60,.1);  color:var(--orange); border:1px solid rgba(251,146,60,.2); }
+.uv-cat.very-high { background:rgba(248,113,113,.1); color:var(--red);    border:1px solid rgba(248,113,113,.2); }
+.uv-cat.extreme   { background:rgba(167,139,250,.1); color:var(--purple); border:1px solid rgba(167,139,250,.2); }
+.uv-bar-wrap  { margin-bottom:6px; }
+.uv-bar-track {
+  height:6px; border-radius:3px; position:relative; overflow:visible;
+  background: linear-gradient(90deg, #4ade80, #f59e0b 30%, #fb923c 55%, #f87171 75%, #a78bfa);
+}
+.uv-bar-fill  {
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:12px; height:12px; background:#fff; border-radius:50%;
+  box-shadow:0 0 0 2px rgba(0,0,0,.4); transition:left .5s ease; pointer-events:none;
+}
+.uv-bar-labels { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:4px; }
+.uv-advice { font-size:11px; color:var(--dim); margin-top:5px; }
+
+/* Sholat */
+.sh-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+.sh-title  { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+.sh-date   { font-size:10px; color:var(--muted); font-family:var(--mono); }
+.sh-countdown {
+  background: rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.15);
+  border-radius:var(--r2); padding:12px 14px; margin-bottom:14px; text-align:center;
+}
+.sh-next-label  { font-size:9px; color:var(--accent); text-transform:uppercase; letter-spacing:.1em; margin-bottom:4px; }
+.sh-next-name   { font-size:15px; font-weight:700; color:var(--accent); }
+.sh-next-time   { font-size:26px; font-weight:300; font-family:var(--mono); color:var(--text); }
+.sh-countdown-val { font-size:11px; color:var(--dim); margin-top:3px; }
+.sh-list  { display:flex; flex-direction:column; gap:2px; }
+.sh-item  { display:flex; align-items:center; justify-content:space-between; padding:7px 9px; border-radius:var(--r2); font-size:12px; transition:background .15s; border:1px solid transparent; }
+.sh-item:hover  { background:var(--s2); }
+.sh-item.active { background:rgba(245,158,11,.06); border-color:rgba(245,158,11,.15); }
+.sh-item.done   { opacity:.4; }
+.sh-name  { font-weight:500; display:flex; align-items:center; gap:7px; }
+.sh-time  { font-family:var(--mono); font-size:12px; color:var(--dim); }
+.sh-item.active .sh-time { color:var(--accent); }
+.sh-dot   { width:5px; height:5px; border-radius:50%; background:var(--muted); }
+.sh-item.active .sh-dot { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.sh-item.done .sh-dot { background:var(--green); }
+
+/* Stats summary */
+.stat-bottom { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px 22px; }
+.stat-bottom-title { font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+.sum-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.sum-c     { background:var(--s2); border:1px solid var(--border); border-radius:var(--r2); padding:14px 16px; }
+.sum-l     { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; }
+.sum-v     { font-size:22px; font-weight:600; font-family:var(--mono); }
+
+/* ─────────────────────────────────────────
+   CHAT
+───────────────────────────────────────── */
+.chat-layout { display:grid; grid-template-columns:1fr 290px; gap:16px; height:calc(100vh - 120px); }
+.chat-main   { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); display:flex; flex-direction:column; overflow:hidden; }
+.chat-hdr    { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:11px; }
+.chat-ai-av  { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(167,139,250,.12)); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:14px; }
+.chat-ai-n   { font-size:13px; font-weight:600; }
+.chat-ai-s   { font-size:10px; color:var(--dim); }
+.chat-msgs   { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:10px; }
+.chat-msgs::-webkit-scrollbar { width:3px; }
+.chat-msgs::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.cmsg { display:flex; gap:9px; align-items:flex-start; animation:mIn .2s ease both; max-width:84%; }
+.cmsg.user { flex-direction:row-reverse; align-self:flex-end; }
+@keyframes mIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
+.cbub { padding:10px 14px; font-size:13px; line-height:1.6; border-radius:10px; }
+.cmsg.ai .cbub     { background:var(--s2); border:1px solid var(--border); border-radius:2px 10px 10px 10px; }
+.cmsg.user .cbub   { background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.15); color:#bae6fd; border-radius:10px 2px 10px 10px; }
+.cmsg.action .cbub { background:rgba(74,222,128,.06); border:1px solid rgba(74,222,128,.15); color:var(--green); font-size:12px; border-radius:8px; }
+.cav { width:26px; height:26px; border-radius:50%; background:var(--s2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; margin-top:2px; overflow:hidden; }
+.cav img { width:100%;height:100%;object-fit:cover; }
+.chat-ftr  { padding:14px 18px; border-top:1px solid var(--border); display:flex; gap:9px; }
+.chat-inp  { flex:1; background:var(--s2); border:1px solid var(--border); border-radius:var(--r2); color:var(--text); font-family:var(--sans); font-size:13px; padding:9px 13px; outline:none; transition:border-color .2s; }
+.chat-inp:focus { border-color:var(--accent); }
+.chat-inp::placeholder { color:var(--muted); }
+.chat-send { background:var(--accent); border:none; border-radius:var(--r2); color:#0a0c10; padding:0 18px; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; transition:opacity .2s; }
+.chat-send:hover { opacity:.88; }
+.chat-send:disabled { opacity:.35; cursor:not-allowed; }
+.typing { font-size:11px; color:var(--dim); padding:3px 18px; display:none; }
+.typing.show { display:block; }
+.chat-side { display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+.cic   { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; }
+.cic-t { font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.ir    { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.ir:last-child { border-bottom:none; }
+.ik  { color:var(--dim); font-size:11px; }
+.iv  { font-family:var(--mono); font-size:11px; }
+.iv.ok     { color:var(--green); }
+.iv.warn   { color:var(--accent); }
+.iv.danger { color:var(--red); }
+
+/* ─────────────────────────────────────────
+   ANALYTICS
+───────────────────────────────────────── */
+.an-grid  { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px; }
+.cc       { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px 22px; }
+.cc-t     { font-size:13px; font-weight:600; margin-bottom:4px; }
+.cc-s     { font-size:11px; color:var(--dim); margin-bottom:16px; }
+.chart-area { height:140px; display:flex; align-items:flex-end; gap:3px; }
+.ch-bar   { flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height .5s; cursor:pointer; }
+.ch-bar:hover { opacity:.7; }
+
+/* ─────────────────────────────────────────
+   ALERTS
+───────────────────────────────────────── */
+.al-tbl  { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+.al-head { display:grid; grid-template-columns:100px 1fr 120px; padding:10px 18px; background:var(--s2); border-bottom:1px solid var(--border); font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+.al-row  { display:grid; grid-template-columns:100px 1fr 120px; padding:12px 18px; border-bottom:1px solid var(--border); font-size:12px; align-items:center; transition:background .15s; }
+.al-row:hover { background:var(--s2); }
+.al-row:last-child { border-bottom:none; }
+.badge   { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:100px; font-size:9px; font-weight:700; text-transform:uppercase; }
+.badge.d { background:rgba(248,113,113,.08); color:var(--red);    border:1px solid rgba(248,113,113,.15); }
+.badge.w { background:rgba(245,158,11,.08);  color:var(--accent); border:1px solid rgba(245,158,11,.15); }
+.badge.i { background:rgba(74,222,128,.08);  color:var(--green);  border:1px solid rgba(74,222,128,.15); }
+.al-ts   { font-family:var(--mono); font-size:10px; color:var(--dim); }
+
+/* ─────────────────────────────────────────
+   SETTINGS
+───────────────────────────────────────── */
+.set-layout { display:grid; grid-template-columns:180px 1fr; gap:16px; }
+.set-menu   { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:10px; height:fit-content; }
+.smi { padding:8px 10px; border-radius:var(--r2); font-size:13px; cursor:pointer; transition:all .15s; color:var(--dim); margin-bottom:1px; }
+.smi:hover  { background:var(--s2); color:var(--text); }
+.smi.active { background:rgba(245,158,11,.07); color:var(--accent); }
+.set-panel  { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:28px; }
+.sp-t { font-size:15px; font-weight:700; margin-bottom:5px; }
+.sp-s { font-size:12px; color:var(--dim); margin-bottom:24px; padding-bottom:18px; border-bottom:1px solid var(--border); }
+.sr   { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); }
+.sr:last-child { border-bottom:none; }
+.sr-n { font-size:13px; font-weight:500; margin-bottom:3px; }
+.sr-d { font-size:11px; color:var(--dim); }
+.tog  { width:36px; height:20px; background:var(--s3); border-radius:20px; position:relative; cursor:pointer; transition:background .2s; border:1px solid var(--border2); flex-shrink:0; }
+.tog.on { background:var(--accent); border-color:var(--accent); }
+.tok  { width:13px; height:13px; background:#fff; border-radius:50%; position:absolute; top:3px; left:3px; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.tog.on .tok { left:19px; }
+.th-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.thi label { display:block; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+.thi input { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:var(--r2); color:var(--text); font-family:var(--mono); font-size:13px; padding:8px 11px; outline:none; transition:border-color .2s; }
+.thi input:focus { border-color:var(--accent); }
+.sv-btn { margin-top:18px; background:var(--accent); border:none; border-radius:var(--r2); color:#0a0c10; font-family:var(--sans); font-size:13px; font-weight:700; padding:9px 24px; cursor:pointer; }
+.pav-sec { display:flex; align-items:center; gap:18px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+.pav-big { width:64px; height:64px; border-radius:50%; background:var(--s2); border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:28px; overflow:hidden; cursor:pointer; transition:all .2s; flex-shrink:0; }
+.pav-big:hover { border-color:var(--accent); }
+.pav-big img { width:100%;height:100%;object-fit:cover;display:none; }
+.chg-btn { background:var(--s2); border:1px solid var(--border); color:var(--text); font-family:var(--sans); font-size:12px; padding:6px 14px; border-radius:var(--r2); cursor:pointer; transition:all .2s; }
+.chg-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ─────────────────────────────────────────
+   ALERT BANNER
+───────────────────────────────────────── */
+#alertBanner { position:fixed; top:0; left:var(--sw); right:0; z-index:9999; pointer-events:none; }
+.bn { display:flex; align-items:center; gap:12px; padding:12px 22px; font-size:12px; pointer-events:all; border-bottom:1px solid rgba(0,0,0,.15); animation:bnIn .3s ease both; }
+.bn.danger { background:rgba(153,27,27,.95); color:#fff; backdrop-filter:blur(10px); }
+.bn.warn   { background:rgba(120,53,15,.95); color:#fff; backdrop-filter:blur(10px); }
+.bn.ok     { background:rgba(5,74,55,.95);   color:#fff; backdrop-filter:blur(10px); }
+.bn-ic { font-size:16px; }
+.bn-txt { flex:1; }
+.bn-t  { font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; }
+.bn-m  { font-size:11px; opacity:.85; margin-top:1px; }
+.bn-x  { background:none; border:none; color:inherit; font-size:15px; cursor:pointer; opacity:.6; }
+@keyframes bnIn  { from{transform:translateY(-100%);opacity:0;} to{transform:translateY(0);opacity:1;} }
+@keyframes bnOut { from{opacity:1;max-height:60px;padding:12px 22px;} to{opacity:0;max-height:0;padding:0;} }
+.bn.rm { animation:bnOut .25s ease forwards; }
+
+/* ─────────────────────────────────────────
+   HOURLY MODAL
+───────────────────────────────────────── */
+#hourlyModal { position:fixed; inset:0; z-index:9990; display:none; align-items:center; justify-content:center; padding:20px; }
+#hourlyModal.show { display:flex; }
+.hm-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); }
+.hm-box { position:relative; z-index:1; width:100%; max-width:640px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--r); overflow:hidden; box-shadow:0 40px 80px rgba(0,0,0,.5); animation:hmIn .25s cubic-bezier(.16,1,.3,1) both; }
+@keyframes hmIn { from{opacity:0;transform:translateY(12px) scale(.97);} to{opacity:1;transform:none;} }
+.hm-head  { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.hm-title { font-size:14px; font-weight:600; color:var(--text); }
+.hm-close { width:28px; height:28px; border-radius:var(--r2); border:none; background:var(--s2); color:var(--dim); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.hm-close:hover { background:var(--s3); }
+.hm-scroll { overflow-x:auto; padding:18px 20px 20px; }
+.hm-scroll::-webkit-scrollbar { height:3px; }
+.hm-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.hm-chart  { display:flex; gap:5px; min-width:max-content; align-items:flex-end; height:160px; padding-bottom:28px; position:relative; }
+.hm-bar-wrap { display:flex; flex-direction:column; align-items:center; gap:3px; width:42px; }
+.hm-bar   { width:26px; border-radius:3px 3px 0 0; min-height:4px; transition:height .4s ease; cursor:default; }
+.hm-bar:hover { opacity:.75; }
+.hm-bar-temp { font-size:10px; font-weight:600; color:var(--text); white-space:nowrap; font-family:var(--mono); }
+.hm-bar-time { font-size:9px; color:var(--muted); white-space:nowrap; }
+.hm-bar-ic   { font-size:12px; }
+.hm-bar-rain { font-size:9px; color:var(--blue); white-space:nowrap; }
+.hm-legend   { display:flex; gap:14px; padding:0 20px 14px; flex-wrap:wrap; }
+.hm-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--dim); }
+.hm-leg-dot  { width:8px; height:8px; border-radius:2px; }
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media (max-width: 900px) {
+  :root { --sw: 0px; }
+  .sidebar { transform: translateX(-248px); }
+  #alertBanner { left: 0; }
+  .sensor-row, .dev-row, .ws-row, .an-grid, .sum-grid { grid-template-columns: 1fr; }
+  .chat-layout, .set-layout { grid-template-columns: 1fr; }
+  .wx-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <!-- LEFT: Branding -->
+  <div class="lg-left">
+    <div class="lg-grid-bg"></div>
+    <div class="lg-top-badge">
+      <span>●</span> <span>Sistem aktif</span>
+    </div>
+    <div class="lg-brand">
+      <div class="lg-brand-headline">Pantau<br><em>Rumah Pintar</em><br>dari mana saja.</div>
+      <div class="lg-brand-desc">Monitoring IoT real-time berbasis ESP32 &amp; Gemini AI — sensor suhu, kelembaban, asap, dan kontrol perangkat.</div>
+      <div class="lg-chips">
+        <div class="lg-chip"><b>ESP32</b> Mikrokontroler</div>
+        <div class="lg-chip"><b>DHT11</b> Sensor Suhu</div>
+        <div class="lg-chip"><b>MQ-2</b> Sensor Asap</div>
+        <div class="lg-chip"><b>Gemini AI</b> Asisten</div>
+      </div>
+    </div>
+  </div>
+  <!-- RIGHT: Form -->
+  <div class="lg-right">
+    <div class="lg-form-header">
+      <div class="lg-form-eyebrow">IoT Monitor · Ciseeng</div>
+      <div class="lg-form-title" id="lgFormTitle">Selamat datang</div>
+      <div class="lg-form-sub" id="lgFormSub">Masuk untuk mengakses dashboard</div>
+    </div>
+    <div class="lg-tabs">
+      <button class="lg-tab active" onclick="swTab('login')" id="tabLogin">Masuk</button>
+      <button class="lg-tab" onclick="swTab('register')" id="tabRegister">Daftar</button>
+    </div>
+    <!-- LOGIN FORM -->
+    <div id="fLogin">
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="lUser" type="text" placeholder="Masukkan username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="lPass" type="password" placeholder="Masukkan password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="lg-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
+      <div class="lg-err" id="lErr"></div>
+    </div>
+    <!-- REGISTER FORM -->
+    <div id="fRegister" style="display:none">
+      <div class="av-upload" onclick="document.getElementById('avIn').click()" style="cursor:pointer">
+        <div class="av-prev"><img id="avPrev" alt=""><span>📷</span></div>
+        <div class="av-info">
+          <div class="av-info-title">Foto Profil</div>
+          <div class="av-hint">Klik untuk upload (opsional)</div>
+        </div>
+        <input type="file" id="avIn" accept="image/*" style="display:none" onchange="prevAv(this)">
+      </div>
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="rUser" type="text" placeholder="Buat username unik" autocomplete="username"></div>
+      <div class="fg">
+        <label class="fl">Password</label>
+        <input class="fi" id="rPass" type="password" placeholder="Min 8 karakter" autocomplete="new-password" oninput="checkPwStrength(this.value)">
+        <div class="pw-strength" id="pwStrength"></div>
+      </div>
+      <div class="fg"><label class="fl">Konfirmasi Password</label><input class="fi" id="rPass2" type="password" placeholder="Ulangi password" autocomplete="new-password"></div>
+      <button class="lg-btn" onclick="doRegister()">Buat Akun</button>
+      <div class="lg-err" id="rErr"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- HOURLY MODAL -->
+<div id="hourlyModal">
+  <div class="hm-backdrop" onclick="closeHourly()"></div>
+  <div class="hm-box">
+    <div class="hm-head">
+      <div class="hm-title" id="hmTitle">Prakiraan Per Jam</div>
+      <button class="hm-close" onclick="closeHourly()">✕</button>
+    </div>
+    <div class="hm-scroll">
+      <div class="hm-chart" id="hmChart"></div>
+    </div>
+    <div class="hm-legend">
+      <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--blue)"></div>Suhu rendah</div>
+      <div class="hm-leg-item"><div class="hm-leg-dot" style="background:var(--orange)"></div>Suhu tinggi</div>
+      <div class="hm-leg-item">💧 = Peluang hujan</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="alertBanner"></div>
+  <aside class="sidebar">
+    <div class="sb-logo"><div class="sb-icon">🏠</div><span>IoT Monitor</span></div>
+    <div class="sb-user">
+      <div class="sb-av" id="sbAv">👤</div>
+      <div><div class="sb-uname" id="sbName">—</div><div class="sb-role" id="sbRole">Administrator</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-sec">Utama</div>
+      <div class="nav-item active" onclick="goto('overview')"><span class="nav-ic">📊</span>Overview</div>
+      <div class="nav-item" onclick="goto('chat')"><span class="nav-ic">🤖</span>Chat AI</div>
+      <div class="nav-item" onclick="goto('analytics')"><span class="nav-ic">📈</span>Analitik</div>
+      <div class="nav-item" onclick="goto('alerts')"><span class="nav-ic">🔔</span>Alert Log<span class="nb" id="alertBadge">0</span></div>
+      <div class="nav-sec">Sistem</div>
+      <div class="nav-item" onclick="goto('settings')"><span class="nav-ic">⚙️</span>Pengaturan</div>
+    </nav>
+    <div class="sb-bot"><button class="lo-btn" onclick="doLogout()"><span>🚪</span>Keluar</button></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><div class="tp-title" id="tpTitle">Overview</div><div class="tp-bc">IoT Monitor / <span id="tpSub">Dashboard</span></div></div>
+      <div class="tp-right">
+        <div class="sp"><div class="dot on" id="stDot"></div><span id="stTxt">Online</span></div>
+        <div class="tp-clk" id="clock">--:--:--</div>
+      </div>
+    </div>
+
+    <!-- ══ OVERVIEW ══ -->
+    <div class="page active" id="page-overview">
+      <div class="ph">
+        <div><h2>Overview</h2><p>Kondisi ruangan, cuaca luar & jadwal sholat Ciseeng</p></div>
+        <div class="ph-acts">
+          <button class="btn-o" id="soundBtn" onclick="toggleSound()">🔔 Suara ON</button>
+          <button class="btn-o" onclick="fetchAll()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="sensor-row">
+        <div class="sc" id="cTemp"><div class="sc-label">Suhu Dalam</div><div><span class="sc-val" id="vTemp">--</span><span class="sc-unit">°C</span></div><div class="sparkline" id="spTemp"></div><div class="sc-st dim" id="stTemp">— menunggu data</div></div>
+        <div class="sc" id="cHumid"><div class="sc-label">Kelembaban</div><div><span class="sc-val" id="vHumid">--</span><span class="sc-unit">%</span></div><div class="sparkline" id="spHumid"></div><div class="sc-st dim" id="stHumid">— menunggu data</div></div>
+        <div class="sc" id="cSmoke"><div class="sc-label">Asap · MQ-2</div><div><span class="sc-val" id="vSmoke">--</span><span class="sc-unit">ppm</span></div><div class="sparkline" id="spSmoke"></div><div class="sc-st dim" id="stSmoke">— menunggu data</div></div>
+      </div>
+      <div class="dev-row">
+        <div class="dc" id="fanCard">
+          <div class="dc-top"><div class="dc-name">Kipas · GPIO 2</div><div class="dc-ic">🌀</div></div>
+          <div class="dc-st" id="fanSt">MATI</div>
+          <div class="dc-sub" id="fanAct">— belum ada aksi</div>
+          <div class="dc-btns">
+            <button class="db on-f" onclick="ctrlFan('on')">▶ Nyalakan</button>
+            <button class="db off-f" onclick="ctrlFan('off')">■ Matikan</button>
+          </div>
+        </div>
+        <div class="dc" id="lampCard">
+          <div class="dc-top"><div class="dc-name">Lampu · GPIO 4</div><div class="dc-ic">💡</div></div>
+          <div class="dc-st" id="lampSt">MATI</div>
+          <div class="dc-sub" id="lampAct">— belum ada aksi</div>
+          <div class="dc-btns">
+            <button class="db on-l" onclick="ctrlLamp('on')">▶ Nyalakan</button>
+            <button class="db off-l" onclick="ctrlLamp('off')">■ Matikan</button>
+          </div>
+        </div>
+      </div>
+      <div class="ws-row">
+        <div class="wx-card">
+          <div class="wx-header">
+            <div>
+              <div class="wx-loc">🌍 Ciseeng, Kab. Bogor</div>
+              <div class="wx-updated" id="wxUpdated">— memuat cuaca</div>
+            </div>
+            <div id="wxUvBadge" class="uv-badge-wrap"></div>
+          </div>
+          <div class="wx-main">
+            <div class="wx-icon" id="wxIcon">⏳</div>
+            <div>
+              <div class="wx-temp"><span id="wxTemp">--</span><span style="font-size:20px;color:var(--text-dim)">°C</span></div>
+              <div class="wx-feel" id="wxFeel">Terasa --°C</div>
+              <div class="wx-desc" id="wxDesc">Memuat...</div>
+            </div>
+          </div>
+          <div class="wx-grid">
+            <div class="wx-stat"><div class="wx-stat-val" id="wxHumid">--%</div><div class="wx-stat-lbl">Kelembaban</div></div>
+            <div class="wx-stat"><div class="wx-stat-val" id="wxWind">-- km/h</div><div class="wx-stat-lbl">Angin</div></div>
+            <div class="wx-stat"><div class="wx-stat-val" id="wxRain">-- mm</div><div class="wx-stat-lbl">Hujan</div></div>
+            <div class="wx-stat"><div class="wx-stat-val" id="wxCloud">--%</div><div class="wx-stat-lbl">Awan</div></div>
+          </div>
+          <!-- UV INDEX CARD -->
+          <div class="uv-card" id="uvCard" style="display:none">
+            <div class="uv-card-header">
+              <span class="uv-label">☀️ UV Index</span>
+              <span class="uv-val" id="uvVal">—</span>
+              <span class="uv-cat" id="uvCat">—</span>
+            </div>
+            <div class="uv-bar-wrap">
+              <div class="uv-bar-track">
+                <div class="uv-bar-fill" id="uvBarFill"></div>
+              </div>
+              <div class="uv-bar-labels">
+                <span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span>
+              </div>
+            </div>
+            <div class="uv-advice" id="uvAdvice">—</div>
+          </div>
+          <div class="wx-forecast" id="wxForecast">
+            <div style="color:var(--text-muted);font-size:12px;padding:10px">— memuat prakiraan</div>
+          </div>
+        </div>
+        <div class="sholat-card">
+          <div class="sh-header">
+            <div class="sh-title">🕌 Jadwal Sholat</div>
+            <div class="sh-date" id="shDate">--</div>
+          </div>
+          <div class="sh-countdown">
+            <div class="sh-next-label">Waktu Berikutnya</div>
+            <div class="sh-next-name" id="shNextName">—</div>
+            <div class="sh-next-time" id="shNextTime">--:--</div>
+            <div class="sh-countdown-val" id="shCountdown">menghitung...</div>
+          </div>
+          <div class="sh-list" id="shList">
+            <div style="color:var(--text-muted);font-size:12px;padding:8px">— memuat jadwal</div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-bottom">
+        <div class="stat-bottom-title">Statistik 24 Jam · <span id="statCount" style="color:var(--text-muted)">memuat...</span></div>
+        <div class="sum-grid">
+          <div class="sum-c"><div class="sum-l">Suhu Rata-rata</div><div class="sum-v" id="s-tavg">--°C</div></div>
+          <div class="sum-c"><div class="sum-l">Kelembaban Rata-rata</div><div class="sum-v" id="s-havg">--%</div></div>
+          <div class="sum-c"><div class="sum-l">Asap Max</div><div class="sum-v" id="s-smax">--</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHAT ══ -->
+    <div class="page" id="page-chat">
+      <div class="ph"><div><h2>Chat AI</h2><p>Tanya cuaca, jadwal sholat, kondisi ruangan atau beri perintah</p></div></div>
+      <div class="chat-layout">
+        <div class="chat-main">
+          <div class="chat-hdr">
+            <div class="chat-ai-av">🤖</div>
+            <div><div class="chat-ai-n">Gemini AI Assistant</div><div class="chat-ai-s">IoT Monitor · Gemini 2.5 Flash</div></div>
+          </div>
+          <div class="chat-msgs" id="chatMsgs">
+            <div class="cmsg ai">
+              <div class="cav">🤖</div>
+              <div class="cbub">Halo! Saya asisten smart home untuk Ciseeng. Saya tahu kondisi sensor, cuaca luar, dan jadwal sholat hari ini. Contoh: <i>"cuaca sekarang gimana?"</i>, <i>"kapan dzuhur?"</i>, <i>"nyalakan kipas"</i>.</div>
+            </div>
+          </div>
+          <div class="typing" id="typingInd">⏳ AI sedang memproses...</div>
+          <div class="chat-ftr">
+            <input class="chat-inp" id="chatInp" placeholder="Tanya cuaca, sholat, atau beri perintah..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="chat-send" id="chatSendBtn" onclick="sendChat()">Kirim →</button>
+          </div>
+        </div>
+        <div class="chat-side">
+          <div class="cic">
+            <div class="cic-t">Sensor Ruangan</div>
+            <div class="ir"><span class="ik">Suhu</span><span class="iv" id="ci-t">--°C</span></div>
+            <div class="ir"><span class="ik">Kelembaban</span><span class="iv" id="ci-h">--%</span></div>
+            <div class="ir"><span class="ik">Asap</span><span class="iv" id="ci-s">--</span></div>
+          </div>
+          <div class="cic">
+            <div class="cic-t">Cuaca Luar</div>
+            <div class="ir"><span class="ik">Suhu Luar</span><span class="iv" id="ci-wt">--°C</span></div>
+            <div class="ir"><span class="ik">Kondisi</span><span class="iv" id="ci-wd">--</span></div>
+            <div class="ir"><span class="ik">Hujan</span><span class="iv" id="ci-wr">-- mm</span></div>
+          </div>
+          <div class="cic">
+            <div class="cic-t">Perangkat</div>
+            <div class="ir"><span class="ik">🌀 Kipas</span><span class="iv" id="ci-fan">MATI</span></div>
+            <div class="ir"><span class="ik">💡 Lampu</span><span class="iv" id="ci-lamp">MATI</span></div>
+          </div>
+          <div class="cic">
+            <div class="cic-t">Perintah Cepat</div>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;">
+              <button class="btn-o" style="width:100%;text-align:left" onclick="quickCmd('bagaimana cuaca sekarang?')">🌤️ Cek Cuaca</button>
+              <button class="btn-o" style="width:100%;text-align:left" onclick="quickCmd('jadwal sholat hari ini')">🕌 Jadwal Sholat</button>
+              <button class="btn-o" style="width:100%;text-align:left" onclick="quickCmd('nyalakan kipas')">🌀 Nyalakan Kipas</button>
+              <button class="btn-o" style="width:100%;text-align:left" onclick="quickCmd('matikan kipas')">🌀 Matikan Kipas</button>
+              <button class="btn-o" style="width:100%;text-align:left" onclick="quickCmd('kondisi ruangan sekarang')">📊 Cek Kondisi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYTICS ══ -->
+    <div class="page" id="page-analytics">
+      <div class="ph"><div><h2>Analitik</h2><p>Grafik tren data sensor 40 data terakhir</p></div><button class="btn-o" onclick="fetchHistory()">↻ Refresh</button></div>
+      <div class="an-grid">
+        <div class="cc"><div class="cc-t">Tren Suhu</div><div class="cc-s">40 data terakhir · °C</div><div class="chart-area" id="chTemp"></div></div>
+        <div class="cc">
+          <div class="cc-t">Ringkasan 24 Jam</div><div class="cc-s">Statistik periode ini</div>
+          <div style="display:flex;flex-direction:column;">
+            <div class="ir"><span class="ik">Suhu min</span><span class="iv" id="a-tmin">--</span></div>
+            <div class="ir"><span class="ik">Suhu max</span><span class="iv" id="a-tmax">--</span></div>
+            <div class="ir"><span class="ik">Suhu avg</span><span class="iv" id="a-tavg">--</span></div>
+            <div class="ir"><span class="ik">Lembab avg</span><span class="iv" id="a-havg">--</span></div>
+            <div class="ir"><span class="ik">Asap max</span><span class="iv" id="a-smax">--</span></div>
+            <div class="ir"><span class="ik">Total data</span><span class="iv" id="a-cnt">--</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="an-grid">
+        <div class="cc"><div class="cc-t">Tren Kelembaban</div><div class="cc-s">40 data · %</div><div class="chart-area" id="chHumid"></div></div>
+        <div class="cc"><div class="cc-t">Tren Asap MQ-2</div><div class="cc-s">40 data terakhir</div><div class="chart-area" id="chSmoke"></div></div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTS ══ -->
+    <div class="page" id="page-alerts">
+      <div class="ph"><div><h2>Alert Log</h2><p>Riwayat semua peringatan sistem</p></div><button class="btn-o" onclick="fetchAlerts()">↻ Refresh</button></div>
+      <div class="al-tbl">
+        <div class="al-head"><div>Severity</div><div>Pesan</div><div>Waktu</div></div>
+        <div id="alertsList"><div style="padding:30px;text-align:center;color:var(--text-muted);font-size:13px">— memuat data</div></div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="ph"><div><h2>Pengaturan</h2><p>Konfigurasi sistem dan profil</p></div></div>
+      <div class="set-layout">
+        <div class="set-menu">
+          <div class="smi active" onclick="swSet('profile')">👤 Profil</div>
+          <div class="smi" onclick="swSet('threshold')">🌡️ Threshold</div>
+          <div class="smi" onclick="swSet('notif')">🔔 Notifikasi</div>
+          <div class="smi" onclick="swSet('device')">📟 Device Info</div>
+        </div>
+        <div class="set-panel">
+          <div id="set-profile">
+            <div class="sp-t">Profil Pengguna</div>
+            <div class="sp-s">Kelola akun dan foto profil</div>
+            <div class="pav-sec">
+              <div class="pav-big" id="pavBig" onclick="document.getElementById('pavIn').click()">
+                <img id="pavImg" alt=""><span id="pavEm">👤</span>
+              </div>
+              <div>
+                <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px">Klik foto untuk mengganti. Format JPG/PNG.</p>
+                <button class="chg-btn" onclick="document.getElementById('pavIn').click()">Ganti Foto</button>
+                <input type="file" id="pavIn" accept="image/*" style="display:none" onchange="changePhoto(this)">
+              </div>
+            </div>
+            <div class="sr"><div><div class="sr-n">Username</div><div class="sr-d" id="profNameD">—</div></div></div>
+            <div class="sr"><div><div class="sr-n">Role</div><div class="sr-d" id="profRole">—</div></div></div>
+            
+          </div>
+          <div id="set-threshold" style="display:none">
+            <div class="sp-t">Threshold Sensor</div>
+            <div class="sp-s">Batas nilai sensor untuk alert dan otomasi</div>
+            <div class="th-grid">
+              <div class="thi"><label>Suhu Max (°C)</label><input type="number" id="th-tm" value="35"></div>
+              <div class="thi"><label>Suhu Min (°C)</label><input type="number" id="th-tn" value="15"></div>
+              <div class="thi"><label>Kelembaban Max (%)</label><input type="number" id="th-hm" value="80"></div>
+              <div class="thi"><label>Kelembaban Min (%)</label><input type="number" id="th-hn" value="30"></div>
+              <div class="thi"><label>Asap Warning</label><input type="number" id="th-sw" value="600"></div>
+              <div class="thi"><label>Asap Kritis</label><input type="number" id="th-sc" value="1200"></div>
+            </div>
+            <button class="sv-btn">Simpan</button>
+          </div>
+          <div id="set-notif" style="display:none">
+            <div class="sp-t">Notifikasi</div>
+            <div class="sp-s">Preferensi alert dan notifikasi</div>
+            <div class="sr"><div><div class="sr-n">Suara Alert</div><div class="sr-d">Bunyi beep saat ada alert</div></div><div class="tog on" id="tog-snd" onclick="this.classList.toggle('on');soundOn=this.classList.contains('on')"><div class="tok"></div></div></div>
+            <div class="sr"><div><div class="sr-n">Browser Notification</div><div class="sr-d">Pop-up notifikasi</div></div><div class="tog on" onclick="this.classList.toggle('on')"><div class="tok"></div></div></div>
+            <div class="sr"><div><div class="sr-n">Reminder Sholat</div><div class="sr-d">Notifikasi 10 menit sebelum adzan</div></div><div class="tog on" onclick="this.classList.toggle('on')"><div class="tok"></div></div></div>
+            <div class="sr"><div><div class="sr-n">Auto Kipas</div><div class="sr-d">Kipas nyala otomatis saat suhu tinggi</div></div><div class="tog on" onclick="this.classList.toggle('on')"><div class="tok"></div></div></div>
+          </div>
+          <div id="set-device" style="display:none">
+            <div class="sp-t">Informasi Device</div>
+            <div class="sp-s">Konfigurasi hardware ESP32</div>
+            <div class="sr"><div><div class="sr-n">Device ID</div><div class="sr-d" id="devId">—</div></div></div>
+            <div class="sr"><div><div class="sr-n">Lokasi</div><div class="sr-d">Ciseeng, Kab. Bogor · -6.3328, 106.8312</div></div></div>
+            <div class="sr"><div><div class="sr-n">GPIO Kipas</div><div class="sr-d">GPIO 2 (Built-in LED)</div></div></div>
+            <div class="sr"><div><div class="sr-n">GPIO Lampu</div><div class="sr-d">GPIO 4 (LED + 220Ω)</div></div></div>
+            <div class="sr"><div><div class="sr-n">DHT11</div><div class="sr-d">GPIO 14</div></div></div>
+            <div class="sr"><div><div class="sr-n">MQ-2</div><div class="sr-d">GPIO 34 (Analog)</div></div></div>
+            <div class="sr"><div><div class="sr-n">Enkripsi</div><div class="sr-d">AES-256-GCM</div></div></div>
+            <div class="sr"><div><div class="sr-n">Server</div><div class="sr-d">http://192.168.92.30:5000</div></div></div>
+            <div class="sr"><div><div class="sr-n">Data Terakhir</div><div class="sr-d" id="devTs">—</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════
+const SERVER   = 'http://192.168.92.30:5000';
+const LAT      = -6.3328;
+const LON      = 106.8312;
+
+const WX_URL = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
+  + `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation,uv_index,is_day,cloud_cover`
+  + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset`
+  + `&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m,uv_index`
+  + `&timezone=Asia%2FJakarta&forecast_days=4`;
+
+const WX_CODE = {
+  0:'☀️ Cerah',1:'🌤️ Hampir Cerah',2:'⛅ Berawan Sebagian',3:'☁️ Mendung',
+  45:'🌫️ Berkabut',48:'🌫️ Berkabut',51:'🌦️ Gerimis Ringan',53:'🌦️ Gerimis',
+  55:'🌧️ Gerimis Lebat',61:'🌧️ Hujan Ringan',63:'🌧️ Hujan',65:'🌧️ Hujan Lebat',
+  71:'🌨️ Salju Ringan',80:'🌦️ Hujan Lokal',81:'🌧️ Hujan Lokal Sedang',
+  82:'⛈️ Hujan Lokal Lebat',95:'⛈️ Badai Petir',99:'⛈️ Badai Petir Besar'
+};
+const WX_ICON = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',
+  61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',99:'⛈️'
+};
+const SHOLAT_NAMES = ['subuh','dzuhur','ashar','maghrib','isya'];
+const SHOLAT_LABEL = {subuh:'Subuh',dzuhur:'Dzuhur',ashar:'Ashar',maghrib:'Maghrib',isya:'Isya'};
+const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const hist = {t:[],h:[],s:[]};
+const MAX = 20;
+const alertLogs = [];
+let prevT=null,prevH=null,prevS=null;
+let fanOn=false,lampOn=false,soundOn=true,audioCtx=null;
+let dataIv,devIv,clkIv,shIv;
+let sholatData = null;
+let wxData = null;
+
+// ════════════════════════════════════════════
+// AUTH — Database 4 user (hash SHA-256)
+// Password disimpan sebagai hash, tidak pernah plaintext
+// ════════════════════════════════════════════
+
+// Database user hardcoded dengan hash SHA-256
+// Format: username -> { hash: SHA256(password), role, avatar }
+// Akun default (hardcoded, tidak bisa dihapus)
+const DEFAULT_USERS = {
+  'admin': { hash: 'd3fc50c8f714cebd16d6c827826df01205bf519529f9d34775293cf9b70a420e', role: 'Administrator', avatar: null },
+  'user1': { hash: '553c2010cf20754fc05b7c718973986ed99342c653c243dec6af3a180a673562', role: 'Pengguna', avatar: null },
+  'user2': { hash: '901ad11bd366cd2f255e1bfa5e51fb23285f2310c6eb15b4301c34b45b668f25', role: 'Pengguna', avatar: null },
+  'user3': { hash: '3abfd29fe8b797bcea7e9b7912637c722cfa0369b1a08fcbba0a88551d944b64', role: 'Pengguna', avatar: null }
+};
+// Gabung default + user terdaftar dari localStorage
+function getUserDB() {
+  const saved = JSON.parse(localStorage.getItem('sh_users') || '{}');
+  // Reattach avatar dari storage terpisah
+  Object.keys(saved).forEach(u => {
+    const av = localStorage.getItem('av_' + u);
+    if (av) saved[u].avatar = av;
+  });
+  return Object.assign({}, DEFAULT_USERS, saved);
+}
+function saveUserDB(u, data) {
+  if (DEFAULT_USERS[u]) return; // jangan overwrite default
+  try {
+    const saved = JSON.parse(localStorage.getItem('sh_users') || '{}');
+    // Simpan TANPA avatar — avatar disimpan terpisah di localStorage dengan key sendiri
+    // agar tidak exceed quota jika banyak user
+    const { avatar, ...dataNoAv } = data;
+    saved[u] = dataNoAv;
+    localStorage.setItem('sh_users', JSON.stringify(saved));
+    // Simpan avatar terpisah, dikompres ke max 60px
+    if (avatar) {
+      try { localStorage.setItem('av_' + u, avatar); } catch(e) { /* skip jika quota */ }
+    }
+  } catch(e) {
+    console.warn('saveUserDB error:', e);
+  }
+}
+
+// Tab switch login/register
+function swTab(t) {
+  document.getElementById('fLogin').style.display    = t==='login'    ? 'block' : 'none';
+  document.getElementById('fRegister').style.display = t==='register' ? 'block' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active',    t==='login');
+  document.getElementById('tabRegister').classList.toggle('active', t==='register');
+  document.getElementById('lgFormTitle').textContent = t==='login' ? 'Selamat datang' : 'Buat akun baru';
+  document.getElementById('lgFormSub').textContent   = t==='login' ? 'Masuk untuk mengakses dashboard' : 'Daftar dengan username & password';
+}
+
+// Indikator kekuatan password
+function checkPwStrength(v) {
+  const el = document.getElementById('pwStrength');
+  if (!v) { el.className = 'pw-strength'; return; }
+  const strong = v.length >= 8 && /[A-Z]/.test(v) && /[0-9]/.test(v);
+  const medium = v.length >= 6;
+  el.className = 'pw-strength ' + (strong ? 'strong' : medium ? 'medium' : 'weak');
+}
+
+// Preview avatar upload — kompres ke 80x80px agar hemat storage
+function prevAv(inp) {
+  if (!inp.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const orig = new Image();
+    orig.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 80; // max 80x80px — ~3KB saja
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // crop center square
+      const s = Math.min(orig.width, orig.height);
+      const ox = (orig.width - s) / 2;
+      const oy = (orig.height - s) / 2;
+      ctx.drawImage(orig, ox, oy, s, s, 0, 0, size, size);
+      const compressed = canvas.toDataURL('image/jpeg', 0.7); // ~3KB
+      const img = document.getElementById('avPrev');
+      img.src = compressed; img.style.display = 'block';
+    };
+    orig.src = e.target.result;
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+
+// Register akun baru
+function doRegister() {
+  const user  = document.getElementById('rUser').value.trim().toLowerCase();
+  const pass  = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  const err   = document.getElementById('rErr');
+  err.style.display = 'none';
+  if (!user || !pass)          { showErr(err, 'Username dan password wajib diisi'); return; }
+  if (user.length < 3)         { showErr(err, 'Username minimal 3 karakter'); return; }
+  if (pass.length < 6)         { showErr(err, 'Password minimal 6 karakter'); return; }
+  if (pass !== pass2)          { showErr(err, 'Konfirmasi password tidak cocok'); return; }
+  const db = getUserDB();
+  if (db[user])                { showErr(err, 'Username sudah dipakai'); return; }
+  const avI = document.getElementById('avPrev');
+  const av  = (avI.src && avI.src.length > 100) ? avI.src : null;
+  const h   = sha256(pass); // simpan HASH bukan plaintext
+  saveUserDB(user, { hash: h, role: 'Pengguna', avatar: av });
+  setS({ username: user, role: 'Pengguna', avatar: av });
+  startApp();
+}
+
+function sha256(s) {
+  // Pure JS SHA-256 — bekerja di HTTP maupun HTTPS
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  var mathPow = Math.pow;
+  var maxWord = mathPow(2, 32);
+  var lengthProperty = 'length';
+  var i, j;
+  var result = '';
+  var words = [];
+  var asciiBitLength = s[lengthProperty] * 8;
+  var hash = [];
+  var k = [];
+  var primeCounter = k[lengthProperty];
+  var isComposite = {};
+  for (var candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+    }
+  }
+  s += '\x80';
+  while (s[lengthProperty] % 64 - 56) s += '\x00';
+  for (i = 0; i < s[lengthProperty]; i++) {
+    j = s.charCodeAt(i);
+    if (j >> 8) return '';
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+  words[words[lengthProperty]] = (asciiBitLength);
+  for (j = 0; j < words[lengthProperty];) {
+    var w = words.slice(j, j += 16);
+    var oldHash = hash.slice(0);
+    for (i = 0; i < 64; i++) {
+      var i2 = i + j - 16;
+      var w15 = w[i - 15], w2 = w[i - 2];
+      var a = hash[0], e = hash[4];
+      var temp1 = hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e & hash[5]) ^ (~e & hash[6]))
+        + k[i]
+        + (w[i] = (i < 16) ? w[i] : (
+            w[i - 16]
+            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+            + w[i - 7]
+            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+          ) | 0);
+      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.length = 8;
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      var b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+const gS  = () => JSON.parse(sessionStorage.getItem('sh_s') || 'null');
+const setS = u => sessionStorage.setItem('sh_s', JSON.stringify(u));
+const clrS = () => sessionStorage.removeItem('sh_s');
+
+function doLogin() {
+  const user = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  const err  = document.getElementById('lErr');
+  err.style.display = 'none';
+
+  if (!user || !pass) { showErr(err, 'Username dan password wajib diisi'); return; }
+
+  const db = getUserDB();
+  const dbUser = db[user];
+  if (!dbUser) { showErr(err, 'Username tidak ditemukan'); return; }
+
+  const inputHash = sha256(pass);
+  if (inputHash !== dbUser.hash) { showErr(err, 'Password salah'); return; }
+
+  setS({ username: user, role: dbUser.role, avatar: dbUser.avatar || null });
+  startApp();
+}
+
+function doLogout() {
+  clrS();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('lUser').value = '';
+  document.getElementById('lPass').value = '';
+  clearInterval(dataIv); clearInterval(devIv); clearInterval(clkIv); clearInterval(shIv);
+}
+
+function showErr(el, m) {
+  el.textContent = m;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// ════════════════════════════════════════════
+// APP INIT
+// ════════════════════════════════════════════
+function startApp(){
+  const s = gS(); if(!s) return;
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sbName').textContent = s.username;
+  document.getElementById('sbRole').textContent = s.role || 'Pengguna';
+  document.getElementById('profNameD').textContent = s.username;
+  document.getElementById('profRole').textContent = s.role || 'Pengguna';
+  if(s.avatar) setAllAv(s.avatar);
+  fetchAll(); fetchStats(); fetchDevState();
+  dataIv = setInterval(fetchAll, 10000);
+  devIv  = setInterval(fetchDevState, 3000);
+  clkIv  = setInterval(updateClock, 1000);
+  shIv   = setInterval(updateSholatCountdown, 30000);
+  updateClock();
+}
+window.addEventListener('load', () => { if(gS()) startApp(); });
+
+function fetchAll(){fetchSensor();fetchWeather();fetchSholat();}
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+const titles={overview:['Overview','Dashboard'],chat:['Chat AI','Asisten Gemini'],analytics:['Analitik','Grafik & Tren'],alerts:['Alert Log','Riwayat'],settings:['Pengaturan','Konfigurasi']};
+function goto(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`.nav-item[onclick="goto('${page}')"]`).classList.add('active');
+  document.getElementById('tpTitle').textContent=titles[page][0];
+  document.getElementById('tpSub').textContent=titles[page][1];
+  if(page==='analytics')fetchHistory();
+  if(page==='alerts')fetchAlerts();
+}
+function swSet(t){
+  ['profile','threshold','notif','device'].forEach(x=>document.getElementById('set-'+x).style.display=x===t?'':'none');
+  document.querySelectorAll('.smi').forEach((el,i)=>el.classList.toggle('active',['profile','threshold','notif','device'][i]===t));
+}
+
+// ════════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════════
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('id-ID',{hour12:false});}
+
+// ════════════════════════════════════════════
+// AUDIO
+// ════════════════════════════════════════════
+function beep(type){
+  if(!soundOn)return;
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime;
+    o.connect(g);g.connect(audioCtx.destination);
+    if(type==='danger'){o.frequency.setValueAtTime(880,t);g.gain.setValueAtTime(.28,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);o.start(t);o.stop(t+.5);}
+    else{o.frequency.setValueAtTime(520,t);g.gain.setValueAtTime(.1,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.start(t);o.stop(t+.25);}
+  }catch(e){}
+}
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById('soundBtn').textContent=soundOn?'🔔 Suara ON':'🔕 Suara OFF';
+  const tog=document.getElementById('tog-snd');if(tog)tog.classList.toggle('on',soundOn);
+  if(soundOn)beep('ok');
+}
+
+// ════════════════════════════════════════════
+// BANNER / ALERT
+// ════════════════════════════════════════════
+function showBanner(type,icon,title,msg){
+  const c=document.getElementById('alertBanner'),item=document.createElement('div');
+  item.className=`bn ${type}`;
+  const now=new Date().toLocaleTimeString('id-ID',{hour12:false});
+  item.innerHTML=`<span class="bn-ic">${icon}</span><span class="bn-txt"><div class="bn-t">${title}</div><div class="bn-m">${msg}</div></span><span style="font-size:10px;opacity:.6">${now}</span><button class="bn-x" onclick="this.closest('.bn').classList.add('rm');setTimeout(()=>this.closest('.bn')?.remove(),260)">✕</button>`;
+  c.appendChild(item);
+  setTimeout(()=>{item.classList.add('rm');setTimeout(()=>item.remove(),260);},type==='danger'?13000:7000);
+}
+function pushAlert(msg,level,title){
+  alertLogs.unshift({msg,level,title,time:new Date().toLocaleTimeString('id-ID',{hour12:false})});
+  if(alertLogs.length>60)alertLogs.pop();
+  const b=document.getElementById('alertBadge');b.style.display='';b.textContent=alertLogs.length;
+  beep(level);showBanner(level,level==='danger'?'🚨':level==='warn'?'⚠️':'✅',title,msg);
+  if('Notification'in window&&Notification.permission==='granted')
+    new Notification(`${level==='danger'?'🚨':'⚠️'} ${title}`,{body:msg,tag:title});
+}
+
+// ════════════════════════════════════════════
+// DEVICE CONTROL
+// ════════════════════════════════════════════
+function updFan(on,src){
+  fanOn=on;const c=document.getElementById('fanCard'),now=new Date().toLocaleTimeString('id-ID',{hour12:false});
+  on?c.classList.add('af'):c.classList.remove('af');
+  document.getElementById('fanSt').textContent=on?'MENYALA':'MATI';
+  if(src)document.getElementById('fanAct').textContent=`${now} — ${on?'dinyalakan':'dimatikan'} via ${src}`;
+  const ci=document.getElementById('ci-fan');ci.textContent=on?'MENYALA':'MATI';ci.className='iv'+(on?' ok':'');
+}
+function updLamp(on,src){
+  lampOn=on;const c=document.getElementById('lampCard'),now=new Date().toLocaleTimeString('id-ID',{hour12:false});
+  on?c.classList.add('al'):c.classList.remove('al');
+  document.getElementById('lampSt').textContent=on?'MENYALA':'MATI';
+  if(src)document.getElementById('lampAct').textContent=`${now} — ${on?'dinyalakan':'dimatikan'} via ${src}`;
+  const ci=document.getElementById('ci-lamp');ci.textContent=on?'MENYALA':'MATI';ci.className='iv'+(on?' ok':'');
+}
+async function ctrlFan(a){try{const r=await fetch(`${SERVER}/api/control`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:'led',action:a,source:'web'})});const j=await r.json();if(j.status==='success'){updFan(j.led,'web');beep('ok');}}catch(e){}}
+async function ctrlLamp(a){try{const r=await fetch(`${SERVER}/api/control`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:'lampu',action:a,source:'web'})});const j=await r.json();if(j.status==='success'){updLamp(j.lampu,'web');beep('ok');}}catch(e){}}
+async function fetchDevState(){try{const j=await(await fetch(`${SERVER}/api/state`,{cache:'no-store'})).json();if(j.led!==fanOn)updFan(j.led,j.updated_by||'server');if(j.lampu!==lampOn)updLamp(j.lampu,j.lampu_updated_by||'server');}catch(e){}}
+
+// ════════════════════════════════════════════
+// SENSOR
+// ════════════════════════════════════════════
+const tSt=t=>t>35?{c:'danger',l:'⬆ Terlalu Tinggi'}:t<15?{c:'warn',l:'⬇ Terlalu Rendah'}:{c:'ok',l:'✓ Normal'};
+const hSt=h=>h>80?{c:'warn',l:'⬆ Terlalu Lembab'}:h<30?{c:'warn',l:'⬇ Terlalu Kering'}:{c:'ok',l:'✓ Normal'};
+const sSt=s=>s>1200?{c:'danger',l:'⬆ Kritis'}:s>600?{c:'warn',l:'⬆ Perhatian'}:{c:'ok',l:'✓ Aman'};
+
+function sparkline(id,data,color){
+  const el=document.getElementById(id);if(!el||!data.length)return;
+  const mx=Math.max(...data),mn=Math.min(...data),rng=mx-mn||1;
+  el.innerHTML=data.map((v,i)=>`<div class="sp-bar" style="height:${Math.max(4,Math.round(((v-mn)/rng)*100))}%;opacity:${i===data.length-1?.9:.15+(i/data.length)*.5};background:${color}"></div>`).join('');
+}
+function bigChart(id,data,color){
+  const el=document.getElementById(id);if(!el||!data.length)return;
+  const mx=Math.max(...data),mn=Math.min(...data),rng=mx-mn||1;
+  el.innerHTML=data.map((v,i)=>`<div class="ch-bar" style="height:${Math.max(4,Math.round(((v-mn)/rng)*100))}%;opacity:${.3+(i/data.length)*.6};background:${color}" title="${v}"></div>`).join('');
+}
+
+async function fetchSensor(){
+  try{
+    const d=(await(await fetch(`${SERVER}/api/latest`,{cache:'no-store'})).json()).data;
+    const T=parseFloat(d.temperature),H=parseFloat(d.humidity),S=parseInt(d.smoke??0);
+    hist.t.push(T);if(hist.t.length>MAX)hist.t.shift();
+    hist.h.push(H);if(hist.h.length>MAX)hist.h.shift();
+    hist.s.push(S);if(hist.s.length>MAX)hist.s.shift();
+    document.getElementById('vTemp').textContent=T.toFixed(1);
+    document.getElementById('vHumid').textContent=H.toFixed(1);
+    document.getElementById('vSmoke').textContent=S;
+    document.getElementById('ci-t').textContent=T.toFixed(1)+'°C';
+    document.getElementById('ci-h').textContent=H.toFixed(1)+'%';
+    document.getElementById('ci-s').textContent=S;
+    document.getElementById('devId').textContent=d.device_id||'--';
+    document.getElementById('devTs').textContent=d.timestamp||'--';
+    const ts=tSt(T),hs=hSt(H),ss=sSt(S);
+    ['cTemp','cHumid','cSmoke'].forEach(id=>document.getElementById(id).className='sc');
+    document.getElementById('cTemp').classList.add(ts.c);
+    document.getElementById('cHumid').classList.add(hs.c);
+    document.getElementById('cSmoke').classList.add(ss.c);
+    document.getElementById('stTemp').className=`sc-st ${ts.c}`;document.getElementById('stTemp').textContent=ts.l;
+    document.getElementById('stHumid').className=`sc-st ${hs.c}`;document.getElementById('stHumid').textContent=hs.l;
+    document.getElementById('stSmoke').className=`sc-st ${ss.c}`;document.getElementById('stSmoke').textContent=ss.l;
+    sparkline('spTemp',hist.t,'#38bdf8');
+    sparkline('spHumid',hist.h,'#34d399');
+    sparkline('spSmoke',hist.s,S>1200?'#f87171':S>600?'#fbbf24':'#34d399');
+    if(prevT!==null){
+      if(T>35&&prevT<=35)pushAlert(`Suhu naik ke ${T.toFixed(1)}°C`,'danger','Suhu Terlalu Tinggi');
+      else if(T<15&&prevT>=15)pushAlert(`Suhu turun ke ${T.toFixed(1)}°C`,'warn','Suhu Rendah');
+      else if(prevT>35&&T<=35)pushAlert(`Suhu kembali normal: ${T.toFixed(1)}°C`,'ok','Suhu Normal');
+    }
+    if(prevH!==null){
+      if(H>80&&prevH<=80)pushAlert(`Kelembaban tinggi: ${H.toFixed(1)}%`,'warn','Kelembaban Tinggi');
+      else if(H<30&&prevH>=30)pushAlert(`Kelembaban rendah: ${H.toFixed(1)}%`,'warn','Kelembaban Rendah');
+    }
+    if(prevS!==null){
+      if(S>1200&&prevS<=1200)pushAlert(`Asap kritis! MQ-2: ${S}`,'danger','Bahaya Asap');
+      else if(S>600&&prevS<=600)pushAlert(`Asap terdeteksi MQ-2: ${S}`,'warn','Peringatan Asap');
+      else if(prevS>600&&S<=600)pushAlert(`Asap kembali aman. MQ-2: ${S}`,'ok','Asap Normal');
+    }
+    prevT=T;prevH=H;prevS=S;
+    document.getElementById('stDot').className='dot on';
+    document.getElementById('stTxt').textContent='Online';
+  }catch(e){
+    document.getElementById('stDot').className='dot off';
+    document.getElementById('stTxt').textContent='Offline';
+  }
+}
+
+async function fetchStats(){
+  try{
+    const s=(await(await fetch(`${SERVER}/api/statistics?hours=24`,{cache:'no-store'})).json()).data;
+    document.getElementById('statCount').textContent=`${s.count} data`;
+    document.getElementById('s-tavg').textContent=s.temperature.avg+'°C';
+    document.getElementById('s-havg').textContent=s.humidity.avg+'%';
+    document.getElementById('s-smax').textContent=s.smoke.max;
+    document.getElementById('a-tmin').textContent=s.temperature.min+'°C';
+    document.getElementById('a-tmax').textContent=s.temperature.max+'°C';
+    document.getElementById('a-tavg').textContent=s.temperature.avg+'°C';
+    document.getElementById('a-havg').textContent=s.humidity.avg+'%';
+    document.getElementById('a-smax').textContent=s.smoke.max;
+    document.getElementById('a-cnt').textContent=s.count+' readings';
+  }catch(e){}
+}
+
+async function fetchHistory(){
+  try{
+    const rows=(await(await fetch(`${SERVER}/api/history?limit=40`,{cache:'no-store'})).json()).data;
+    bigChart('chTemp',rows.map(r=>parseFloat(r.temperature)),'#38bdf8');
+    bigChart('chHumid',rows.map(r=>parseFloat(r.humidity)),'#34d399');
+    bigChart('chSmoke',rows.map(r=>parseInt(r.smoke??0)),'#f87171');
+    fetchStats();
+  }catch(e){}
+}
+
+async function fetchAlerts(){
+  try{
+    const data=(await(await fetch(`${SERVER}/api/alerts?limit=50`,{cache:'no-store'})).json()).data;
+    const el=document.getElementById('alertsList');
+    if(!data.length){el.innerHTML='<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">— tidak ada alert</div>';return;}
+    el.innerHTML=data.map(a=>`<div class="al-row"><div><span class="badge ${a.severity==='critical'?'d':a.severity==='info'?'i':'w'}">${a.severity==='critical'?'🚨 Kritis':a.severity==='info'?'✅ Info':'⚠️ Warning'}</span></div><div>${a.message}</div><div class="al-ts">${a.timestamp}</div></div>`).join('');
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════
+// WEATHER — Open-Meteo
+// ════════════════════════════════════════════
+async function fetchWeather(){
+  try{
+    const r=await fetch(WX_URL);
+    const d=await r.json();
+    wxData=d;
+    const c=d.current;
+    const code=c.weather_code;
+    document.getElementById('wxIcon').textContent=WX_ICON[code]||'🌡️';
+    document.getElementById('wxTemp').textContent=c.temperature_2m.toFixed(1);
+    document.getElementById('wxFeel').textContent=`Terasa ${c.apparent_temperature.toFixed(1)}°C`;
+    document.getElementById('wxDesc').textContent=WX_CODE[code]||`Kode ${code}`;
+    document.getElementById('wxHumid').textContent=c.relative_humidity_2m+'%';
+    document.getElementById('wxWind').textContent=c.wind_speed_10m.toFixed(1)+' km/h';
+    document.getElementById('wxRain').textContent=c.precipitation.toFixed(1)+' mm';
+    document.getElementById('wxCloud').textContent=c.cloud_cover+'%';
+    // UV Index
+    renderUV(c.uv_index, c.is_day);
+    const now=new Date();
+    document.getElementById('wxUpdated').textContent=`Update: ${now.toLocaleTimeString('id-ID',{hour12:false})}`;
+    document.getElementById('ci-wt').textContent=c.temperature_2m.toFixed(1)+'°C';
+    document.getElementById('ci-wd').textContent=(WX_CODE[code]||'--').replace(/[^\w\s\u00C0-\u024F]/gu,'').trim();
+    document.getElementById('ci-wr').textContent=c.precipitation.toFixed(1)+' mm';
+    wxData = d;
+    const daily=d.daily;
+    const strip=document.getElementById('wxForecast');
+    strip.innerHTML=daily.time.slice(0,4).map((ts,i)=>{
+      const dt=new Date(ts);
+      const dayLabel=i===0?'Hari Ini':i===1?'Besok':DAYS_ID[dt.getDay()];
+      const wc=daily.weather_code[i];
+      const prob=daily.precipitation_probability_max[i];
+      return`<div class="fc-item" onclick="showHourly('${ts}')" style="cursor:pointer" title="Klik untuk detail per jam">
+        <div class="fc-day">${dayLabel}</div>
+        <div class="fc-ic">${WX_ICON[wc]||'🌡️'}</div>
+        <div class="fc-hi">${Math.round(daily.temperature_2m_max[i])}°</div>
+        <div class="fc-lo">${Math.round(daily.temperature_2m_min[i])}°</div>
+        <div class="fc-rain">💧${prob||0}%</div>
+      </div>`;
+    }).join('');
+    if(c.precipitation>0&&prevT===null){
+      pushAlert(`Hujan ${c.precipitation.toFixed(1)}mm terdeteksi di Ciseeng`,'warn','Cuaca: Hujan');
+    }
+  }catch(e){
+    document.getElementById('wxUpdated').textContent='Gagal memuat cuaca';
+  }
+}
+
+
+// ── UV INDEX RENDERER ─────────────────────────
+function renderUV(uv, isDay) {
+  const card = document.getElementById('uvCard');
+  if (!card) return;
+  if (!isDay || uv === undefined || uv === null) {
+    card.style.display = 'none';
+    document.getElementById('wxUvBadge').innerHTML = '<span style="font-size:11px;color:var(--text-muted)">🌙 Malam</span>';
+    return;
+  }
+  card.style.display = 'block';
+
+  // Kategori UV
+  let cat, cls, advice, emoji;
+  if      (uv <= 2)  { cat='Rendah';       cls='low';       emoji='🟢'; advice='Aman beraktivitas di luar. Tidak perlu tabir surya.'; }
+  else if (uv <= 5)  { cat='Sedang';       cls='moderate';  emoji='🟡'; advice='Gunakan topi & kacamata. Tabir surya SPF 15+ dianjurkan.'; }
+  else if (uv <= 7)  { cat='Tinggi';       cls='high';      emoji='🟠'; advice='Tabir surya SPF 30+, baju lengan panjang. Hindari jam 10–14.'; }
+  else if (uv <= 10) { cat='Sangat Tinggi';cls='very-high'; emoji='🔴'; advice='Tabir surya SPF 50+. Wajib pelindung. Batasi aktivitas luar.'; }
+  else               { cat='Ekstrem';      cls='extreme';   emoji='🟣'; advice='⚠️ Hindari keluar. Risiko terbakar dalam < 15 menit.'; }
+
+  document.getElementById('uvVal').textContent      = uv.toFixed(1);
+  document.getElementById('uvCat').textContent      = emoji + ' ' + cat;
+  document.getElementById('uvCat').className        = 'uv-cat ' + cls;
+  document.getElementById('uvAdvice').textContent   = advice;
+  document.getElementById('wxUvBadge').innerHTML    = `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--text-dim)">UV ${uv.toFixed(1)} ${emoji}</span>`;
+
+  // Posisi bar pointer (0–11+ mapped ke 0–100%)
+  const pct = Math.min((uv / 11) * 100, 100);
+  document.getElementById('uvBarFill').style.left = `calc(${pct}% - 6px)`;
+}
+
+
+// ── HOURLY FORECAST MODAL ─────────────────────
+function showHourly(dateStr) {
+  if (!wxData || !wxData.hourly) return;
+  const h = wxData.hourly;
+  // Filter jam untuk tanggal yang dipilih
+  const slots = [];
+  h.time.forEach((t, i) => {
+    if (t.startsWith(dateStr)) {
+      slots.push({
+        time  : t.slice(11, 16),
+        temp  : h.temperature_2m[i],
+        rain  : h.precipitation_probability[i],
+        wc    : h.weather_code[i],
+        wind  : h.wind_speed_10m[i],
+        humid : h.relative_humidity_2m[i],
+        uv    : h.uv_index ? h.uv_index[i] : null
+      });
+    }
+  });
+  if (!slots.length) return;
+
+  const dt     = new Date(dateStr);
+  const isToday = dateStr === new Date().toISOString().slice(0,10);
+  const label  = isToday ? 'Hari Ini' : dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('hmTitle').textContent = '📅 ' + label + ' — Per Jam';
+
+  const temps  = slots.map(s => s.temp);
+  const tMin   = Math.min(...temps);
+  const tMax   = Math.max(...temps);
+  const tRange = tMax - tMin || 1;
+  const maxH   = 110; // px max bar height
+
+  document.getElementById('hmChart').innerHTML = slots.map(s => {
+    const barH   = Math.round(((s.temp - tMin) / tRange) * maxH) + 20;
+    const pct    = (s.temp - tMin) / tRange;
+    const r      = Math.round(56 + pct * (251 - 56));
+    const g      = Math.round(189 + pct * (146 - 189));
+    const b      = Math.round(248 + pct * (60 - 248));
+    const color  = `rgb(${r},${g},${b})`;
+    const icon   = WX_ICON[s.wc] || '🌡️';
+    return `<div class="hm-bar-wrap">
+      <div class="hm-bar-temp">${s.temp.toFixed(1)}°</div>
+      <div class="hm-bar" style="height:${barH}px;background:${color}" title="💧${s.rain}% | 💨${s.wind}km/h | 💦${s.humid}%"></div>
+      <div class="hm-bar-ic">${icon}</div>
+      <div class="hm-bar-rain">${s.rain}%</div>
+      <div class="hm-bar-time">${s.time}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('hourlyModal').classList.add('show');
+}
+
+function closeHourly() {
+  document.getElementById('hourlyModal').classList.remove('show');
+}
+
+// Tutup modal dengan Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHourly(); });
+
+// ════════════════════════════════════════════
+// JADWAL SHOLAT — Database precomputed 3 bulan (Feb–Mei 2026)
+// Dihitung dengan rumus astronomi, metode Kemenag, koreksi WIB UTC+7
+// Fallback: kalkulasi realtime jika tanggal di luar database
+// ════════════════════════════════════════════
+
+const SHOLAT_DB = {
+"2026-02-28":["04:40","12:06","15:10","18:13","19:22"],
+"2026-03-01":["04:40","12:06","15:09","18:13","19:22"],
+"2026-03-02":["04:40","12:06","15:08","18:12","19:21"],
+"2026-03-03":["04:40","12:06","15:07","18:12","19:21"],
+"2026-03-04":["04:40","12:05","15:06","18:11","19:20"],
+"2026-03-05":["04:40","12:05","15:06","18:11","19:20"],
+"2026-03-06":["04:40","12:05","15:06","18:11","19:20"],
+"2026-03-07":["04:40","12:05","15:07","18:10","19:19"],
+"2026-03-08":["04:40","12:05","15:07","18:10","19:19"],
+"2026-03-09":["04:40","12:04","15:08","18:09","19:18"],
+"2026-03-10":["04:40","12:04","15:08","18:09","19:18"],
+"2026-03-11":["04:40","12:04","15:08","18:09","19:17"],
+"2026-03-12":["04:40","12:04","15:09","18:08","19:17"],
+"2026-03-13":["04:40","12:03","15:09","18:08","19:16"],
+"2026-03-14":["04:40","12:03","15:09","18:07","19:16"],
+"2026-03-15":["04:40","12:03","15:10","18:07","19:15"],
+"2026-03-16":["04:40","12:02","15:10","18:06","19:15"],
+"2026-03-17":["04:40","12:02","15:10","18:06","19:14"],
+"2026-03-18":["04:40","12:02","15:10","18:05","19:14"],
+"2026-03-19":["04:40","12:02","15:11","18:05","19:13"],
+"2026-03-20":["04:40","12:01","15:11","18:04","19:13"],
+"2026-03-21":["04:40","12:01","15:11","18:04","19:12"],
+"2026-03-22":["04:39","12:01","15:11","18:03","19:12"],
+"2026-03-23":["04:39","12:00","15:11","18:03","19:11"],
+"2026-03-24":["04:39","12:00","15:11","18:03","19:11"],
+"2026-03-25":["04:39","11:00","15:12","18:02","19:10"],
+"2026-03-26":["04:39","11:59","15:12","18:02","19:10"],
+"2026-03-27":["04:39","11:59","15:12","18:01","19:10"],
+"2026-03-28":["04:39","11:59","15:12","18:01","19:09"],
+"2026-03-29":["04:38","11:59","15:12","18:00","19:09"],
+"2026-03-30":["04:38","11:58","15:12","17:00","19:08"],
+"2026-03-31":["04:38","11:58","15:12","17:59","19:08"],
+"2026-04-01":["04:38","11:58","15:12","17:59","19:07"],
+"2026-04-02":["04:38","11:57","15:12","17:58","19:07"],
+"2026-04-03":["04:38","11:57","15:12","17:58","19:06"],
+"2026-04-04":["04:38","11:57","15:12","17:57","19:06"],
+"2026-04-05":["04:37","11:57","15:12","17:57","19:06"],
+"2026-04-06":["04:37","11:56","15:12","17:56","19:05"],
+"2026-04-07":["04:37","11:56","15:12","17:56","19:05"],
+"2026-04-08":["04:37","11:56","15:12","17:56","19:04"],
+"2026-04-09":["04:37","11:55","15:12","17:55","19:04"],
+"2026-04-10":["04:37","11:55","15:12","17:55","19:04"],
+"2026-04-11":["04:36","11:55","15:12","17:54","19:03"],
+"2026-04-12":["04:36","11:55","15:12","17:54","19:03"],
+"2026-04-13":["04:36","11:54","15:12","17:53","19:03"],
+"2026-04-14":["04:36","11:54","15:12","17:53","19:02"],
+"2026-04-15":["04:36","11:54","15:12","17:53","19:02"],
+"2026-04-16":["04:36","11:54","15:12","17:52","19:01"],
+"2026-04-17":["04:35","11:53","15:12","17:52","19:01"],
+"2026-04-18":["04:35","11:53","15:12","17:51","19:01"],
+"2026-04-19":["04:35","11:53","15:12","17:51","19:01"],
+"2026-04-20":["04:35","11:53","15:12","17:51","19:00"],
+"2026-04-21":["04:35","11:52","15:12","17:50","18:00"],
+"2026-04-22":["04:35","11:52","15:12","17:50","18:00"],
+"2026-04-23":["04:35","11:52","15:12","17:50","18:59"],
+"2026-04-24":["04:34","11:52","15:12","17:49","18:59"],
+"2026-04-25":["04:34","11:52","15:12","17:49","18:59"],
+"2026-04-26":["04:34","11:52","15:12","17:49","18:59"],
+"2026-04-27":["04:34","11:51","15:12","17:48","18:59"],
+"2026-04-28":["04:34","11:51","15:11","17:48","18:58"],
+"2026-04-29":["04:34","11:51","15:11","17:48","18:58"],
+"2026-04-30":["04:34","11:51","15:11","17:47","18:58"],
+"2026-05-01":["04:34","11:51","15:11","17:47","18:58"],
+"2026-05-02":["04:34","11:51","15:11","17:47","18:58"],
+"2026-05-03":["04:33","11:51","15:11","17:47","18:57"],
+"2026-05-04":["04:33","11:51","15:11","17:46","18:57"],
+"2026-05-05":["04:33","11:50","15:11","17:46","18:57"],
+"2026-05-06":["04:33","11:50","15:11","17:46","18:57"],
+"2026-05-07":["04:33","11:50","15:11","17:46","18:57"],
+"2026-05-08":["04:33","11:50","15:11","17:46","18:57"],
+"2026-05-09":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-10":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-11":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-12":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-13":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-14":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-15":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-16":["04:33","11:50","15:11","17:45","18:57"],
+"2026-05-17":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-18":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-19":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-20":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-21":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-22":["04:33","11:50","15:11","17:44","18:57"],
+"2026-05-23":["04:33","11:50","15:12","17:44","18:57"],
+"2026-05-24":["04:33","11:50","15:12","17:44","18:57"],
+"2026-05-25":["04:33","11:51","15:12","17:44","18:57"],
+"2026-05-26":["04:34","11:51","15:12","17:44","18:57"],
+"2026-05-27":["04:34","11:51","15:12","17:44","18:57"],
+"2026-05-28":["04:34","11:51","15:12","17:44","18:57"],
+"2026-05-29":["04:34","11:51","15:12","17:44","18:58"],
+"2026-05-30":["04:34","11:51","15:12","17:44","18:58"],
+"2026-05-31":["04:34","11:51","15:12","17:44","18:58"]
+};
+
+function calcSholatRealtime(year, month, day, lat, lon) {
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
+  const fixHour = h => { h = h % 24; return h < 0 ? h + 24 : h; };
+  const JD = (367*year - Math.floor(7*(year+Math.floor((month+9)/12))/4)
+    + Math.floor(275*month/9) + day + 1721013.5);
+  const D = JD - 2451545.0;
+  const g = toRad(357.529 + 0.98560028 * D);
+  const q = 280.459 + 0.98564736 * D;
+  const L = toRad(q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2*g));
+  const e = toRad(23.439 - 0.00000036 * D);
+  const RA = toDeg(Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L))) / 15;
+  const dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const EqT = q/15 - fixHour(RA);
+  const transit = 12 + (-lon/15) - EqT + 7;
+  function sat(angle, ccw) {
+    const cosH = (Math.sin(toRad(angle)) - Math.sin(toRad(lat)) * Math.sin(dec))
+                / (Math.cos(toRad(lat)) * Math.cos(dec));
+    if (Math.abs(cosH) > 1) return NaN;
+    const T = toDeg(Math.acos(cosH)) / 15;
+    return ccw ? transit - T : transit + T;
+  }
+  function asrTimeFixed() {
+    const latR = toRad(lat); const x = Math.abs(latR - dec);
+    const ang = toDeg(Math.atan(1.0 / (1 + Math.tan(x))));
+    const cosH = (Math.sin(toRad(ang)) - Math.sin(latR)*Math.sin(dec))
+                / (Math.cos(latR)*Math.cos(dec));
+    if (Math.abs(cosH) > 1) return NaN;
+    return transit + toDeg(Math.acos(cosH)) / 15;
+  }
+  const toHHMM = h => {
+    h = fixHour(h); const hh = Math.floor(h); let mm = Math.floor((h-hh)*60+0.5);
+    if (mm >= 60) mm = 0;
+    return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+  };
+  return [toHHMM(sat(-20,true)), toHHMM(transit+1/60), toHHMM(asrTimeFixed()), toHHMM(sat(-1,false)), toHHMM(sat(-18,false))];
+}
+
+function fetchSholat() {
+  try {
+    const now = new Date();
+    const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    let times;
+    if (SHOLAT_DB[key]) {
+      // Gunakan database precomputed
+      times = SHOLAT_DB[key];
+    } else {
+      // Fallback: hitung realtime (untuk tanggal di luar database)
+      times = calcSholatRealtime(now.getFullYear(), now.getMonth()+1, now.getDate(), LAT, LON);
+      console.log('Sholat: fallback realtime untuk', key);
+    }
+    sholatData = {
+      subuh: times[0], dzuhur: times[1], ashar: times[2],
+      maghrib: times[3], isya: times[4]
+    };
+    renderSholat(sholatData);
+  } catch(e) {
+    console.error('Sholat error:', e);
+    document.getElementById('shList').innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">Gagal memuat jadwal sholat</div>';
+  }
+}
+
+function renderSholat(jadwal){
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  const dateStr=`${DAYS_ID[now.getDay()]}, ${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('shDate').textContent=dateStr;
+  let nextName=null,nextTime=null,nextMin=9999;
+  SHOLAT_NAMES.forEach(n=>{
+    const t=jadwal[n];if(!t)return;
+    const[h,m]=t.split(':').map(Number);
+    const tm=h*60+m;
+    if(tm>nowMin&&tm<nextMin){nextMin=tm;nextName=n;nextTime=t;}
+  });
+  if(!nextName){nextName='subuh';nextTime=jadwal['subuh'];}
+  document.getElementById('shNextName').textContent=SHOLAT_LABEL[nextName]||nextName;
+  document.getElementById('shNextTime').textContent=nextTime||'--:--';
+  updateSholatCountdown();
+  const list=document.getElementById('shList');
+  list.innerHTML=SHOLAT_NAMES.map(n=>{
+    const t=jadwal[n];if(!t)return'';
+    const[h,m]=t.split(':').map(Number);
+    const tm=h*60+m;
+    const isActive=n===nextName;
+    const isDone=tm<nowMin&&n!==nextName;
+    return`<div class="sh-item${isActive?' active':''}${isDone?' done':''}">
+      <div class="sh-name"><div class="sh-dot"></div>${SHOLAT_LABEL[n]}</div>
+      <div class="sh-time">${t}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateSholatCountdown(){
+  if(!sholatData)return;
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  let nextMin=9999,nextName=null;
+  SHOLAT_NAMES.forEach(n=>{
+    const t=sholatData[n];if(!t)return;
+    const[h,m]=t.split(':').map(Number);
+    const tm=h*60+m;
+    if(tm>nowMin&&tm<nextMin){nextMin=tm;nextName=n;}
+  });
+  if(!nextName){document.getElementById('shCountdown').textContent='Isya sudah lewat';return;}
+  const diff=nextMin-nowMin;
+  const jam=Math.floor(diff/60),mnt=diff%60;
+  const txt=jam>0?`${jam}j ${mnt}m lagi`:`${mnt} menit lagi`;
+  document.getElementById('shCountdown').textContent=txt;
+  if(diff===10){
+    pushAlert(`${SHOLAT_LABEL[nextName]} dalam 10 menit (${sholatData[nextName]})`,'warn',`Waktunya ${SHOLAT_LABEL[nextName]}`);
+  }
+}
+
+// ════════════════════════════════════════════
+// CHAT AI
+// ════════════════════════════════════════════
+function addMsg(text,role){
+  const c=document.getElementById('chatMsgs'),div=document.createElement('div');
+  div.className=`cmsg ${role}`;
+  const s=gS();
+  let av;
+  if(role==='user'&&s?.avatar){av=`<div class="cav"><img src="${s.avatar}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`;}
+  else{av=`<div class="cav">${role==='user'?'👤':role==='action'?'⚡':'🤖'}</div>`;}
+  div.innerHTML=`${av}<div class="cbub">${text}</div>`;
+  c.appendChild(div);c.scrollTop=c.scrollHeight;
+}
+function quickCmd(t){document.getElementById('chatInp').value=t;sendChat();}
+async function sendChat(){
+  const inp=document.getElementById('chatInp'),msg=inp.value.trim();
+  if(!msg)return;
+  addMsg(msg,'user');inp.value='';
+  const btn=document.getElementById('chatSendBtn'),typ=document.getElementById('typingInd');
+  btn.disabled=true;typ.classList.add('show');
+  try{
+    const r=await fetch(`${SERVER}/api/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+    const j=await r.json();typ.classList.remove('show');btn.disabled=false;
+    if(j.action_taken){addMsg(`⚡ ${j.action_taken}`,'action');updFan(j.led,'chat AI');updLamp(j.lampu,'chat AI');beep('ok');}
+    if(j.reply)addMsg(j.reply,'ai');
+  }catch(e){typ.classList.remove('show');btn.disabled=false;addMsg('❌ Gagal terhubung ke server.','ai');}
+}
+
+// ════════════════════════════════════════════
+// PROFILE / AVATAR
+// ════════════════════════════════════════════
+function setAllAv(src){
+  const sa=document.getElementById('sbAv');sa.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  const pi=document.getElementById('pavImg'),pe=document.getElementById('pavEm');
+  if(pi){pi.src=src;pi.style.display='block';}
+  if(pe)pe.style.display='none';
+}
+function changePhoto(inp){
+  if(!inp.files[0])return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    setAllAv(e.target.result);
+    const s=gS();
+    if(s){ s.avatar=e.target.result; setS(s); }
+  };
+  rd.readAsDataURL(inp.files[0]);
+}
+</script>
+</body>
+</html>
